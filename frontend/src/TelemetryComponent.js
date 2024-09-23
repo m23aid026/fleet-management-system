@@ -10,7 +10,7 @@ const TelemetryComponent = () => {
     // Fetch telemetry data from the backend API
     const fetchTelemetryData = async () => {
       try {
-        const response = await axios.get('http://localhost:5001/api/telemetry');
+        const response = await axios.get('http://localhost:5001/api/mongo/telemetry');
         setTelemetryData(response.data);
       } catch (err) {
         setError('Error fetching telemetry data');
