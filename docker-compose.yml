@@ -1,0 +1,11 @@
+version: '1.0'
+
+services:
+  kafka-producer:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      - KAFKA_HOST=${KAFKA_HOST}
+      - KAFKA_API_KEY=${KAFKA_API_KEY}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
