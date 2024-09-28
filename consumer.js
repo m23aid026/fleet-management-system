@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');  // Add this line
 const { KafkaClient, Consumer } = require('kafka-node');
 const mongoose = require('mongoose');
 const axios = require('axios');
@@ -30,71 +31,60 @@ const consumer = new Consumer(
   { autoCommit: true }
 );
 
-// Function to send a POST request to the producer to start the process
-async function startProducer() {
-  try {
-    const response = await axios.post('http://localhost:3001/send-telemetry', {
-      vehicleId: 'Vehicle_2',
-      speed: 65,
-      distance: 10,
-      fuelConsumption: 1.2,
-      latitude: 37.7749, // Sample latitude
-      longitude: -122.4194, // Sample longitude
-    });
-    console.log('Producer started:', response.data);
-  } catch (error) {
-    console.error('Error starting producer:', error);
-  }
-}
-
-// Real-time analytics function
-async function calculateAnalytics(vehicleId) {
-  const stats = await Telemetry.aggregate([
-    { $match: { vehicleId } },
-    { $group: {
-      _id: '$vehicleId',
-      averageSpeed: { $avg: '$speed' },
-      totalDistance: { $sum: '$distance' },
-      totalFuelConsumption: { $sum: '$fuelConsumption' },
-      lastLocation: { $last: '$location' },
-      lastSpeed: { $last: '$speed' },
-    }},
-  ]);
-  return stats[0];  // Return first (and only) group result
-}
-
-// Event listener for Kafka messages
-consumer.on('message', async (message) => {
-  const telemetryData = JSON.parse(message.value);
-
-  // Save telemetry data to MongoDB
-  const telemetry = new Telemetry(telemetryData);
-  await telemetry.save();
-
-  // Real-time analytics calculation
-  const vehicleId = telemetryData.vehicleId;
-  const vehicleStats = await calculateAnalytics(vehicleId);
-  
-  console.log(`Analytics for vehicle ${vehicleId}:`, vehicleStats);
-
-  // Accident detection (speed drop from >60 to 0)
-  if (vehicleStats.lastSpeed > 60 && telemetryData.speed === 0) {
-    console.log(`Accident possibility detected for vehicle ${vehicleId} at location:`, telemetryData.location);
-  }
-});
-
-// Event listener for Kafka consumer error
-consumer.on('error', (err) => {
-  console.error('Kafka Consumer error:', err);
-});
-
-// Express app to listen for requests (optional, for potential API endpoints)
+// Enable CORS for all routes
 const app = express();
+app.use(cors());  // Add this line
+
 const port = 3002;
+
+// API endpoint to get analytics data for X days
+app.get('/analytics/:vehicleId', async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+    const days = parseInt(req.query.days) || 7;  // Default to 7 days if not specified
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);  // X days before today
+
+    // Find telemetry data within the specified time range
+    const telemetryData = await Telemetry.find({
+      vehicleId,
+      timestamp: { $gte: startDate, $lte: endDate }
+    }).sort({ timestamp: 1 }); // Sort by timestamp
+
+    if (!telemetryData.length) {
+      return res.status(404).send({ message: 'No data found for the specified vehicle and date range' });
+    }
+
+    // Calculate total statistics
+    const analytics = await Telemetry.aggregate([
+      { $match: { vehicleId, timestamp: { $gte: startDate, $lte: endDate } } },
+      {
+        $group: {
+          _id: '$vehicleId',
+          averageSpeed: { $avg: '$speed' },
+          totalDistance: { $sum: '$distance' },
+          totalFuelConsumption: { $sum: '$fuelConsumption' },
+        }
+      }
+    ]);
+
+    // Extract timestamps and speeds for time vs speed graph
+    const timestamps = telemetryData.map(data => data.timestamp);
+    const speeds = telemetryData.map(data => data.speed);
+
+    // Respond with both the aggregated statistics and time vs speed data
+    res.send({
+      ...analytics[0],  // Aggregated statistics
+      timestamps,       // Timestamps for time vs speed chart
+      speeds,           // Speed values for time vs speed chart
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).send({ error: 'Failed to fetch analytics' });
+  }
+});
 
 app.listen(port, async () => {
   console.log(`Server running on http://localhost:${port}`);
-
-  // Send a POST request to the producer to start sending data
-  await startProducer();
 });

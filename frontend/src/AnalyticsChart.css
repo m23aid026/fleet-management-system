@@ -1,0 +1,36 @@
+.analytics-container {
+    max-width: 75%;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .chart-container {
+    margin-bottom: 40px;
+    position: relative;
+    height: 400px;  /* Fixed height for better responsiveness */
+  }
+  
+  .days-input {
+    margin-bottom: 20px;
+    padding: 10px;
+    width: 80%;
+    max-width: 200px;
+  }
+  
+  @media (max-width: 768px) {
+    .chart-container {
+      height: 300px;
+    }
+    
+    .days-input {
+      max-width: 80%;
+      padding: 8px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .chart-container {
+      height: 250px;
+    }
+  }
+  
