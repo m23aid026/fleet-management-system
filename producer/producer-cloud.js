@@ -2,7 +2,7 @@ const { Kafka } = require('kafkajs');
 const fleet_1 = require('./fleet-data/fleet1.json');
 const fleet_2 = require('./fleet-data/fleet2.json');
 const dotenv = require("dotenv");
-dotenv.config({ path: `../.env.cloud` });
+dotenv.config({ path: `.env.cloud` });
 // const express = require('express');
 // const bodyParser = require('body-parser');
 // const app = express();
@@ -22,7 +22,7 @@ const producer = KafkaClient.producer();
 
 // Function to send data to Kafka topic
 function sendTelemetryData(telemetryDataFleet) {
-    console.log(process.env.KAFKA_HOST);
+    // console.log(process.env.KAFKA_HOST);
     producer.send({
         topic: process.env.KAFKA_TOPIC,
         messages: [
@@ -51,8 +51,8 @@ function generateFleetData(fleet, i, reverse = false) {
     const speed = fleet[i].speed;
     const timestamp = currentTimestamp;
 
-    if (reverse && vehicleId == 'fleet_1') vehicleId = "fleet_3";
-    else if (reverse && vehicleId == 'fleet_2') vehicleId = "fleet_4";
+    if (reverse && vehicleId == 'vehicle_1') vehicleId = "vehicle_3";
+    else if (reverse && vehicleId == 'vehicle_2') vehicleId = "vehicle_4";
     return {
         vehicleId,
         distance,

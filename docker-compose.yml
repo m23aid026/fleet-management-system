@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    networks:
+      - app-network
+    ports:
+      - 8080
+  kafka-producer:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    environment:
+      - KAFKA_HOST=${KAFKA_HOST}
+      - KAFKA_API_KEY=${KAFKA_API_KEY}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  kafka-consumer:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      - KAFKA_HOST=${KAFKA_HOST}
+      - KAFKA_API_KEY=${KAFKA_API_KEY}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_COLLECTION=${MONGO_COLLECTION}
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:

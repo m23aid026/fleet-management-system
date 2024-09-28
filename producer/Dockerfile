@@ -1,8 +1,9 @@
 FROM node:16-alpine
-WORKDIR /kafka-producer
-COPY producer-cloud.js /kafka-producer
-COPY package*.json /kafka-producer
-COPY fleet-data/ /kafka-producer/fleet-data/
+WORKDIR /fms-app
+COPY producer-cloud.js /fms-app
+COPY package*.json /fms-app
+COPY fleet-data/ /fms-app/fleet-data/
+COPY .env.cloud /fms-app/
 RUN npm install
 #docker-compose --env-file .env.cloud up --build
 

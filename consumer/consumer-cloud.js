@@ -1,7 +1,7 @@
 const { Kafka } = require('kafkajs');
 const mongoose = require('mongoose');
 const dotenv = require("dotenv");
-dotenv.config({ path: `../.env.cloud` });
+dotenv.config({ path: `.env.cloud` });
 
 const kafkaClient = new Kafka({
     brokers: [process.env.KAFKA_HOST],
@@ -29,7 +29,7 @@ const TelemetrySchema = new mongoose.Schema({
     timestamp: Date,
 }, { collection: process.env.MONGO_COLLECTION });
 
-const Telemetry = mongoose.model(process.env.MONGO_COLLECTION, TelemetrySchema);
+const Telemetry = mongoose.model('telemetry', TelemetrySchema);
 
 const consumer = kafkaClient.consumer({ groupId: 'vehicle-group' });
 
