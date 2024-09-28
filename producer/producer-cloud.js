@@ -1,6 +1,8 @@
 const { Kafka } = require('kafkajs');
 const fleet_1 = require('./fleet-data/fleet1.json');
 const fleet_2 = require('./fleet-data/fleet2.json');
+const dotenv = require("dotenv");
+dotenv.config({ path: `../.env.cloud` });
 // const express = require('express');
 // const bodyParser = require('body-parser');
 // const app = express();
