@@ -4,10 +4,16 @@ const { KafkaClient, Consumer } = require('kafka-node');
 const mongoose = require('mongoose');
 const axios = require('axios');
 
+// Measure the startup time
+const startTime = process.hrtime();
+
 // MongoDB Schema and Model
 mongoose.connect('mongodb://localhost:27017/vehicle-data')
   .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('Failed to connect to MongoDB', err));
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB', err);
+    process.exit(1); // Exit the process if MongoDB fails to connect
+  });
 
 const TelemetrySchema = new mongoose.Schema({
   vehicleId: String,
@@ -79,8 +85,6 @@ app.get('/analytics/:vehicleId', async (req, res) => {
     let lastLatitude = null;
     let lastLongitude = null;
 
-    // console.log(telemetryData);
-
     telemetryData.forEach((data, index) => {
       totalDistance += data.distanceTravelled;
       speeds.push(data.speed); // Collect speed data
@@ -118,6 +122,7 @@ app.get('/analytics/:vehicleId', async (req, res) => {
   }
 });
 
+// Get last vehicle locations
 app.get('/analytics/locations', async (req, res) => {
   try {
     // Step 1: Find all the vehicles and sort by timestamp in descending order
@@ -156,8 +161,6 @@ app.get('/analytics/locations', async (req, res) => {
   }
 });
 
-
-
 // Kafka message processing
 consumer.on('message', async (message) => {
   try {
@@ -170,8 +173,8 @@ consumer.on('message', async (message) => {
       distanceTravelled: telemetryData.distanceTravelled || 0,
       fuelLevel: telemetryData.fuelLevel || 0,
       location: {
-        latitude:telemetryData.latitude,
-        longitude:telemetryData.longitude
+        latitude: telemetryData.latitude,
+        longitude: telemetryData.longitude
       },
       timestamp: telemetryData.timestamp
     });
@@ -188,5 +191,11 @@ consumer.on('message', async (message) => {
 
 // Start server
 app.listen(port, () => {
+  // Calculate and log startup time
+  const endTime = process.hrtime(startTime);
+  const seconds = endTime[0]; // seconds
+  const milliseconds = Math.round(endTime[1] / 1e6); // convert nanoseconds to milliseconds
+
   console.log(`Server running on http://localhost:${port}`);
+  console.log(`Application started in ${seconds} seconds and ${milliseconds} milliseconds.`);
 });

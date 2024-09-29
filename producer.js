@@ -114,9 +114,14 @@ function startSendingTelemetryDataForVehicles(vehicleCount) {
   }, interval);
 }
 
+// Start measuring time
+const startTime = process.hrtime();
+
 // Ensure producer is ready before starting to send data
 producer.on('ready', () => {
-  console.log('Kafka Producer is connected and ready.');
+  const endTime = process.hrtime(startTime);
+  const startupTimeInSeconds = (endTime[0] + endTime[1] / 1e9).toFixed(3); // Convert to seconds
+  console.log(`Kafka Producer is connected and ready. Startup time: ${startupTimeInSeconds} seconds`);
 
   const vehicleCount = 5;  // Set how many vehicles you want to simulate
   startSendingTelemetryDataForVehicles(vehicleCount);  // Start sending data immediately
