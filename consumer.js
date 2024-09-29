@@ -64,8 +64,7 @@ app.get('/analytics/:vehicleId', async (req, res) => {
 
     // Find telemetry data from today
     const telemetryData = await Telemetry.find({
-      vehicleId,
-      timestamp: { $gte: today }
+      vehicleId
     }).sort({ timestamp: 1 });
 
     if (!telemetryData.length) {
@@ -80,6 +79,8 @@ app.get('/analytics/:vehicleId', async (req, res) => {
     let lastLatitude = null;
     let lastLongitude = null;
 
+    // console.log(telemetryData);
+
     telemetryData.forEach((data, index) => {
       totalDistance += data.distanceTravelled;
       speeds.push(data.speed); // Collect speed data
@@ -89,8 +90,8 @@ app.get('/analytics/:vehicleId', async (req, res) => {
       fuelEnd = data.fuelLevel; // Last record of the day
       
       // Update last latitude and longitude
-      lastLatitude = data.latitude;
-      lastLongitude = data.longitude;
+      lastLatitude = data.location.latitude;
+      lastLongitude = data.location.longitude;
     });
 
     const fuelConsumed = fuelStart - fuelEnd;
@@ -114,6 +115,44 @@ app.get('/analytics/:vehicleId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching analytics:', error);
     res.status(500).send({ error: 'Failed to fetch analytics' });
+  }
+});
+
+app.get('/analytics/locations', async (req, res) => {
+  try {
+    // Step 1: Find all the vehicles and sort by timestamp in descending order
+    const lastLocations = await Telemetry.find({})
+      .sort({ timestamp: -1 }) // Sort by timestamp descending
+      .exec();
+
+    // Step 2: Create an object to store the latest location for each vehicle
+    const vehicleLatestLocations = {};
+
+    // Step 3: Loop through the sorted results and keep only the latest for each vehicle
+    lastLocations.forEach(location => {
+      if (!vehicleLatestLocations[location.vehicleId]) {
+        vehicleLatestLocations[location.vehicleId] = {
+          vehicleId: location.vehicleId,
+          location: location.location,
+          speed: location.speed,
+          timestamp: location.timestamp
+        };
+      }
+    });
+
+    // Convert the object values back into an array
+    const result = Object.values(vehicleLatestLocations);
+
+    // Step 4: Send the result
+    if (result.length === 0) {
+      return res.status(404).send({ message: 'No locations found' });
+    }
+
+    console.log('Last Locations', result);
+    res.send(result);
+  } catch (error) {
+    console.error('Error fetching last locations:', error);
+    res.status(500).send({ error: 'Failed to fetch locations' });
   }
 });
 

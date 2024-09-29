@@ -42,10 +42,8 @@ function calculateFuelConsumption(previousFuelLevel, speed, distance) {
 }
 
 // Function to generate random speed, sometimes stop
-function generateRandomSpeed(currentSpeed, isStopped) {
-  if (isStopped) return 0;  // If the vehicle is stopped, return 0 speed
-
-  return Math.random() < 0.1 ? 0 : Math.random() * 80 + 20;  // Random speed 20-100, occasionally 0 (stop)
+function generateRandomSpeed(isStopped) {
+  return isStopped ? 0 : Math.random() < 0.1 ? 0 : Math.random() * 80 + 20;  // Random speed 20-100, occasionally 0 (stop)
 }
 
 // Function to send data to Kafka topic
@@ -66,61 +64,44 @@ function sendTelemetryData(vehicleId, telemetryData) {
 // Function to simulate telemetry data for each vehicle
 function startSendingTelemetryDataForVehicles(vehicleCount) {
   const interval = 2000;  // Send data every 2 seconds
-  let vehicleDataIndex = 0;
+  const vehicleStates = Array.from({ length: vehicleCount }, (_, vehicleId) => {
+    const randomIndex = Math.floor(Math.random() * csvData.length);
+    const startingPosition = csvData[randomIndex];
+    
+    return {
+      previousLatitude: startingPosition.latitude,
+      previousLongitude: startingPosition.longitude,
+      distanceTravelled: 0,
+      fuelLevel: 100,  // Start with a full tank (100 liters)
+      vehicleId: vehicleId + 1,
+      speed: 0,  // Start with 0 speed
+      isStopped: false,  // Initially not stopped
+      stopDuration: 0,  // Counter to manage stop duration
+    };
+  });
 
-  // Initialize data for each vehicle with speed starting from 0
-  const vehicleStates = Array.from({ length: vehicleCount }, (_, vehicleId) => ({
-    previousLatitude: csvData[0].latitude,
-    previousLongitude: csvData[0].longitude,
-    distanceTravelled: 0,
-    fuelLevel: 100,  // Start with a full tank (100 liters)
-    vehicleId: vehicleId + 1,
-    speed: 0,  // Start with 0 speed
-    isStopped: false,  // Initially not stopped
-    stopDuration: 0,  // Counter to manage stop duration
-  }));
-
-  // Loop through vehicle count
   setInterval(() => {
     vehicleStates.forEach(vehicleState => {
-      if (vehicleDataIndex >= csvData.length) {
-        vehicleDataIndex = 0;  // Reset to start after reaching end of CSV data
+      // Calculate random speed and fuel level after some intervals
+      vehicleState.speed = generateRandomSpeed(vehicleState.isStopped);
+
+      // Randomly decide to stop the vehicle
+      if (!vehicleState.isStopped && Math.random() < 0.1) {
+        vehicleState.isStopped = true;
       }
 
-      const currentData = csvData[vehicleDataIndex];
-      const distance = calculateDistance(
-        vehicleState.previousLatitude, vehicleState.previousLongitude,
-        currentData.latitude, currentData.longitude
-      );
-
-      // Handle stopping logic
+      // If stopped, manage stop duration
       if (vehicleState.isStopped) {
         vehicleState.stopDuration++;
-
         if (vehicleState.stopDuration >= 5) {  // Resume after 5 intervals (10 seconds)
           vehicleState.isStopped = false;
           vehicleState.stopDuration = 0;
         }
-      } else {
-        // Randomly decide to stop the vehicle
-        if (Math.random() < 0.1) {
-          vehicleState.isStopped = true;
-        }
       }
-
-      // Generate random speed and fuel level after some intervals, but ensure it starts from 0
-      if (vehicleState.speed === 0 && !vehicleState.isStopped) {
-        vehicleState.speed = generateRandomSpeed(vehicleState.speed, vehicleState.isStopped);
-      } else if (!vehicleState.isStopped) {
-        vehicleState.speed = generateRandomSpeed(vehicleState.speed, vehicleState.isStopped);
-      }
-      
-      vehicleState.distanceTravelled += distance;
-      vehicleState.fuelLevel = calculateFuelConsumption(vehicleState.fuelLevel, vehicleState.speed, distance);
 
       const telemetryData = {
-        latitude: currentData.latitude,
-        longitude: currentData.longitude,
+        latitude: vehicleState.previousLatitude,
+        longitude: vehicleState.previousLongitude,
         speed: vehicleState.speed,
         distanceTravelled: vehicleState.distanceTravelled,
         fuelLevel: vehicleState.fuelLevel,
@@ -129,13 +110,7 @@ function startSendingTelemetryDataForVehicles(vehicleCount) {
 
       // Send telemetry data for the vehicle
       sendTelemetryData(vehicleState.vehicleId, telemetryData);
-
-      // Update the previous position for the next iteration
-      vehicleState.previousLatitude = currentData.latitude;
-      vehicleState.previousLongitude = currentData.longitude;
     });
-
-    vehicleDataIndex++;
   }, interval);
 }
 
