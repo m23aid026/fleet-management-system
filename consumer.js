@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');  // Add this line
+const cors = require('cors');
 const { KafkaClient, Consumer } = require('kafka-node');
 const mongoose = require('mongoose');
 const axios = require('axios');
@@ -12,8 +12,8 @@ mongoose.connect('mongodb://localhost:27017/vehicle-data')
 const TelemetrySchema = new mongoose.Schema({
   vehicleId: String,
   speed: Number,
-  distance: Number,
-  fuelConsumption: Number,
+  distanceTravelled: Number,
+  fuelLevel: Number,
   location: {
     latitude: Number,
     longitude: Number,
@@ -33,51 +33,83 @@ const consumer = new Consumer(
 
 // Enable CORS for all routes
 const app = express();
-app.use(cors());  // Add this line
+app.use(cors());
 
 const port = 3002;
 
-// API endpoint to get analytics data for X days
+// Function to send notifications (accident analysis)
+async function sendNotification(vehicleId, message) {
+  try {
+    // Example notification service (modify to integrate with your system)
+    // await axios.post('http://localhost:3003/notify', { vehicleId, message });
+    console.log(`Notification sent for Vehicle ${vehicleId}: ${message}`);
+  } catch (error) {
+    console.error('Failed to send notification:', error);
+  }
+}
+
+// Function for accident analysis (sudden speed drops and speed = 0)
+function analyzeSpeedForAccident(telemetryData) {
+  if (telemetryData.speed === 0) {
+    sendNotification(telemetryData.vehicleId, 'Vehicle stopped, possible accident detected.');
+  }
+}
+
+// API to get today's statistics
 app.get('/analytics/:vehicleId', async (req, res) => {
   try {
     const { vehicleId } = req.params;
-    const days = parseInt(req.query.days) || 7;  // Default to 7 days if not specified
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - days);  // X days before today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Midnight of the current day
 
-    // Find telemetry data within the specified time range
+    // Find telemetry data from today
     const telemetryData = await Telemetry.find({
       vehicleId,
-      timestamp: { $gte: startDate, $lte: endDate }
-    }).sort({ timestamp: 1 }); // Sort by timestamp
+      timestamp: { $gte: today }
+    }).sort({ timestamp: 1 });
 
     if (!telemetryData.length) {
-      return res.status(404).send({ message: 'No data found for the specified vehicle and date range' });
+      return res.status(404).send({ message: 'No data found for the vehicle today' });
     }
 
-    // Calculate total statistics
-    const analytics = await Telemetry.aggregate([
-      { $match: { vehicleId, timestamp: { $gte: startDate, $lte: endDate } } },
-      {
-        $group: {
-          _id: '$vehicleId',
-          averageSpeed: { $avg: '$speed' },
-          totalDistance: { $sum: '$distance' },
-          totalFuelConsumption: { $sum: '$fuelConsumption' },
-        }
-      }
-    ]);
+    // Calculate total distance, mileage, and extract speed, latitude, longitude, timestamps
+    let totalDistance = 0;
+    let fuelStart, fuelEnd;
+    const speeds = []; // To store speed data
+    const timestamps = []; // To store timestamp data
+    let lastLatitude = null;
+    let lastLongitude = null;
 
-    // Extract timestamps and speeds for time vs speed graph
-    const timestamps = telemetryData.map(data => data.timestamp);
-    const speeds = telemetryData.map(data => data.speed);
+    telemetryData.forEach((data, index) => {
+      totalDistance += data.distanceTravelled;
+      speeds.push(data.speed); // Collect speed data
+      timestamps.push(data.timestamp); // Collect timestamp data
 
-    // Respond with both the aggregated statistics and time vs speed data
+      if (index === 0) fuelStart = data.fuelLevel; // First record of the day
+      fuelEnd = data.fuelLevel; // Last record of the day
+      
+      // Update last latitude and longitude
+      lastLatitude = data.latitude;
+      lastLongitude = data.longitude;
+    });
+
+    const fuelConsumed = fuelStart - fuelEnd;
+    const mileage = fuelConsumed > 0 ? totalDistance / fuelConsumed : 0;
+
+    // Get last fuel meter value
+    const lastFuelLevel = telemetryData[telemetryData.length - 1].fuelLevel;
+
+    // Respond with total distance, mileage, last fuel level, speeds, timestamps, and last coordinates
     res.send({
-      ...analytics[0],  // Aggregated statistics
-      timestamps,       // Timestamps for time vs speed chart
-      speeds,           // Speed values for time vs speed chart
+      totalDistance,
+      mileage,
+      lastFuelLevel,
+      speeds, // Include speed data in the response
+      timestamps, // Include timestamps for speed data
+      lastCoordinates: {
+        latitude: lastLatitude,
+        longitude: lastLongitude
+      }
     });
   } catch (error) {
     console.error('Error fetching analytics:', error);
@@ -85,6 +117,37 @@ app.get('/analytics/:vehicleId', async (req, res) => {
   }
 });
 
-app.listen(port, async () => {
+
+
+// Kafka message processing
+consumer.on('message', async (message) => {
+  try {
+    const telemetryData = JSON.parse(message.value);
+
+    // Save telemetry data to MongoDB
+    const newTelemetry = new Telemetry({
+      vehicleId: telemetryData.vehicleId,
+      speed: telemetryData.speed,
+      distanceTravelled: telemetryData.distanceTravelled || 0,
+      fuelLevel: telemetryData.fuelLevel || 0,
+      location: {
+        latitude:telemetryData.latitude,
+        longitude:telemetryData.longitude
+      },
+      timestamp: telemetryData.timestamp
+    });
+
+    await newTelemetry.save();
+
+    // Accident analysis (sudden stop or speed drop)
+    analyzeSpeedForAccident(telemetryData);
+
+  } catch (error) {
+    console.error('Error processing message:', error);
+  }
+});
+
+// Start server
+app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });

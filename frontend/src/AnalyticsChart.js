@@ -6,39 +6,38 @@ import {
   CategoryScale,
   LinearScale,
   LineElement,
-  BarElement,
   PointElement,
   TimeScale,
   Title,
   Tooltip,
-  Legend,
-  ArcElement
+  Legend
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';  // Import date-fns adapter
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
+import { Progress } from 'antd';  // Import Ant Design Progress
 
-// Register the required components
+// Register the required components for Line chart
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   TimeScale,
   Title,
   Tooltip,
-  Legend,
-  ArcElement
+  Legend
 );
 
 const AnalyticsChart = ({ vehicleId }) => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [days, setDays] = useState(7);
-  vehicleId='Vehicle_2';
+  vehicleId = '5';
+
   const fetchAnalytics = async () => {
     try {
       const response = await axios.get(`http://localhost:3002/analytics/${vehicleId}?days=${days}`);
       setAnalyticsData(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     }
@@ -57,27 +56,17 @@ const AnalyticsChart = ({ vehicleId }) => {
       borderColor: 'rgba(75, 192, 192, 1)',
       backgroundColor: 'rgba(75, 192, 192, 0.2)',
       fill: true,
+      tension: 0.4
     }]
   };
 
-  // Prepare the total fuel consumption data for Bar Chart
-  const fuelConsumptionData = {
-    labels: ['Fuel Consumption'],
-    datasets: [{
-      label: 'Total Fuel Consumption',
-      data: [analyticsData ? analyticsData.totalFuelConsumption : 0],
-      backgroundColor: 'rgba(255, 99, 132, 0.6)',
-    }]
-  };
-
-  // Prepare the total distance data for Doughnut Chart
-  const distanceData = {
-    labels: ['Total Distance'],
-    datasets: [{
-      data: [analyticsData ? analyticsData.totalDistance : 0],
-      backgroundColor: ['rgba(54, 162, 235, 0.6)'],
-    }]
-  };
+  // Calculate fuel percentage and remaining fuel in liters
+  const tankCapacity = 50; // liters
+  const fuelUsed = analyticsData ? analyticsData.lastFuelLevel : 0; // Assuming lastFuelLevel is the fuel used
+  const fuelPercentage = ((((100-fuelUsed)*tankCapacity)/tankCapacity) * 100).toFixed(2); // Percentage of fuel used
+  
+  // Calculate distance percentage
+  const distancePercentage = analyticsData ? (analyticsData.totalDistance / 100) * 100 : 0; // Assuming 100km max distance for ring progress
 
   return (
     <div className="analytics-container">
@@ -113,39 +102,35 @@ const AnalyticsChart = ({ vehicleId }) => {
         )}
       </div>
 
-      {/* Fuel Consumption Bar Chart */}
+      {/* Fuel Consumption Progress Circle */}
       <div className="chart-container">
-        <h4>Total Fuel Consumption</h4>
-        {analyticsData && (
-          <Bar
-            data={fuelConsumptionData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: { beginAtZero: true },
-              },
-            }}
-          />
-        )}
+        <h4>Fuel Consumed</h4>
+        <Progress
+          type="circle"
+          percent={fuelPercentage}
+          format={percent => `${parseFloat(percent).toFixed(2)}%`}
+          strokeColor={{
+            '0%': '#108ee9',
+            '100%': '#87d068',
+          }}
+        />
+        <p>Fuel Used: {fuelPercentage} liters</p> {/* Display fuel used in liters */}
       </div>
 
-      {/* Total Distance Doughnut Chart */}
+      {/* Total Distance Traveled Progress Circle */}
       <div className="chart-container">
         <h4>Total Distance Traveled</h4>
-        {analyticsData && (
-          <Doughnut
-            data={distanceData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              title: { display: true, text: 'Total Distance Traveled' },
-            }}
-          />
-        )}
+        <Progress
+          type="circle"
+          percent={distancePercentage}
+          format={percent => `${Math.round((percent / 100) * 100)} km`} // Display distance as km
+          strokeColor={{
+            '0%': '#108ee9',
+            '100%': '#87d068',
+          }}
+        />
       </div>
     </div>
-
   );
 };
 
