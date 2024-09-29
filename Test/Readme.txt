@@ -1,4 +1,4 @@
-To get check testing results follow below steps:
+To check testing results follow below steps:
 
 1] Open J meter from "\apache-jmeter-5.6.3\bin\jmeter.bat" or .sh for Linux
 2] Open KafkaLoadTest.jmx
