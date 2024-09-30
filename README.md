@@ -143,10 +143,14 @@ Consumer Analytics
 The consumer processes incoming telemetry data and calculates real-time analytics, including:
 
 Average Speed: The average speed of each vehicle.
+
 Total Distance Traveled: The total distance traveled by each vehicle.
+
 Fuel Consumption: The total fuel consumption.
+
 Accident Detection: If the speed drops from above 60 to 0 instantly, an accident is flagged.
-Notes
+
+### Notes
 Ensure MongoDB and Kafka are running before starting the producer and consumer.
 The producer will send telemetry data for 1 minute after the consumer triggers it.
 The MongoDB instance stores all the telemetry data, and you can query it directly for further analysis.
