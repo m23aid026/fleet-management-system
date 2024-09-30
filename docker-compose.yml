@@ -1,12 +1,4 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    networks:
-      - app-network
-    ports:
-      - 8080
   kafka-producer:
     build:
       context: ./producer
