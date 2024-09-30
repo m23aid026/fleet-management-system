@@ -1,0 +1,50 @@
+.analytics-container {
+  padding: 20px;
+}
+
+.vehicle-buttons {
+  margin-bottom: 20px;
+}
+
+.vehicle-button {
+  padding: 10px 15px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.vehicle-button.active {
+  background-color: #108ee9;
+  color: white;
+}
+
+.main-layout {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0 20px 0;
+}
+
+.chart-section {
+  flex: 0 0 60%; /* Take 60% of the space */
+  margin-right: 20px;
+}
+
+.progress-section {
+  flex: 0 0 40%; /* Take 40% of the space */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.progress-circle {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-container {
+  margin-top: 20px;
+  height: 400px;
+  width: 100%;
+}
+

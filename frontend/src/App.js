@@ -1,11 +1,13 @@
 import React from 'react';
 import './App.css';
-import TelemetryComponent from './TelemetryComponent';
+import AnalyticsChart from './AnalyticsChart';
+import AllCars from './AllCars';
 
 function App() {
   return (
     <div className="App">
-      <TelemetryComponent />
+      <AnalyticsChart />
+      <AllCars />
     </div>
   );
 }

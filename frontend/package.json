@@ -4,7 +4,7 @@
   "devServer": {
     "proxy": {
       "/api": {
-        "target": "http://localhost:5001",
+        "target": "http://localhost:3002",
         "secure": false
       }
     },
@@ -14,13 +14,21 @@
   },
   "private": true,
   "dependencies": {
+    "@ant-design/charts": "^2.2.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "antd": "^5.21.1",
     "axios": "^1.7.7",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "d3": "^7.9.0",
     "http-proxy-middleware": "^3.0.2",
+    "leaflet": "^1.9.4",
     "react": "^18.3.1",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
+    "react-google-charts": "^4.0.7",
+    "react-leaflet": "^4.2.1",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
