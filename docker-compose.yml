@@ -25,6 +25,8 @@ services:
     build:
       context: ./consumer
       dockerfile: Dockerfile
+    ports:
+      - 3002
     environment:
       - KAFKA_HOST=${KAFKA_HOST}
       - KAFKA_API_KEY=${KAFKA_API_KEY}

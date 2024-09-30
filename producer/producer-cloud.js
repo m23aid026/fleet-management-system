@@ -44,8 +44,8 @@ function generateFleetData(fleet, i, reverse = false) {
 
     const currentTimestamp = new Date();
     let vehicleId = fleet[i].fleetNo;
-    const distance = Math.random() * 10;
-    const fuelConsumption = Math.random() * 2;
+    const distanceTravelled = Math.random() * 10;
+    const fuelLevel = Math.random() * 2;
     const latitude = fleet[i].lat;
     const longitude = fleet[i].long;
     const speed = fleet[i].speed;
@@ -55,11 +55,11 @@ function generateFleetData(fleet, i, reverse = false) {
     else if (reverse && vehicleId == 'vehicle_2') vehicleId = "vehicle_4";
     return {
         vehicleId,
-        distance,
+        distanceTravelled,
         location: { latitude, longitude },
         speed,
         timestamp,
-        fuelConsumption
+        fuelLevel
     };
 }
 // Start sending telemetry data for 1 minute

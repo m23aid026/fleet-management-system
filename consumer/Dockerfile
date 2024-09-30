@@ -5,7 +5,7 @@ COPY .env.cloud /fms-app/
 COPY package*.json /fms-app
 
 RUN npm install
-
+EXPOSE 3002
 CMD ["node", "consumer-cloud.js"]
 
 #docker-compose --env-file ../.env.cloud up --build
