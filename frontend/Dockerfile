@@ -1,6 +1,6 @@
 FROM nginx:1.15.2-alpine
 COPY ./build /var/www
 COPY deployment/nginx.conf /etc/nginx/nginx.conf
-EXPOSE 80
+EXPOSE 81
 
 ENTRYPOINT ["nginx","-g","daemon off;"]

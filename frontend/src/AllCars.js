@@ -19,7 +19,7 @@ const AllCars = () => {
     const vehicleIds = [1, 2, 3, 4, 5]; // Array of vehicle IDs
     try {
       const requests = vehicleIds.map(id =>
-        axios.get(`http://localhost:3002/analytics/${id}`)
+        axios.get(`https://kafka-consumer-830340334999.us-central1.run.app/analytics/${id}`)
       );
       
       const responses = await Promise.all(requests);

@@ -4,7 +4,7 @@
   "devServer": {
     "proxy": {
       "/api": {
-        "target": "http://localhost:3002",
+        "target": "https://kafka-consumer-830340334999.us-central1.run.app",
         "secure": false
       }
     },

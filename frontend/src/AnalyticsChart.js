@@ -22,7 +22,7 @@ const AnalyticsChart = () => {
   // Fetch analytics data based on selected vehicle ID
   const fetchAnalytics = async (vehicleId) => {
     try {
-      const response = await axios.get(`http://localhost:3002/analytics/${vehicleId}`);
+      const response = await axios.get(`https://kafka-consumer-830340334999.us-central1.run.app/analytics/${vehicleId}`);
       setAnalyticsData(response.data);
       console.log(response.data);
     } catch (error) {
