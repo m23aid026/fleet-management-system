@@ -1,0 +1,11 @@
+services:
+  fms-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
