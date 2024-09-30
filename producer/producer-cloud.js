@@ -51,8 +51,8 @@ function generateFleetData(fleet, i, reverse = false) {
     const speed = fleet[i].speed;
     const timestamp = currentTimestamp;
 
-    if (reverse && vehicleId == 'vehicle_1') vehicleId = "vehicle_3";
-    else if (reverse && vehicleId == 'vehicle_2') vehicleId = "vehicle_4";
+    if (reverse && vehicleId == '1') vehicleId = "3";
+    else if (reverse && vehicleId == '2') vehicleId = "4";
     return {
         vehicleId,
         distanceTravelled,
