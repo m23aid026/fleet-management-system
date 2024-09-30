@@ -2,7 +2,7 @@ const express = require('express');
 const kafka = require('kafka-node');
 const fs = require('fs');
 const csv = require('csv-parser');
-const haversine = require('haversine-distance');  // For calculating distance between two points
+const haversine = require('haversine-distance'); // For calculating distance between two points
 
 const app = express();
 
@@ -30,20 +30,20 @@ fs.createReadStream('vehicle_data.csv')
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const point1 = { lat: lat1, lon: lon1 };
   const point2 = { lat: lat2, lon: lon2 };
-  return haversine(point1, point2) / 1000;  // Return distance in kilometers
+  return haversine(point1, point2) / 1000; // Return distance in kilometers
 }
 
 // Function to simulate fuel consumption (fuel decreases with distance and speed)
 function calculateFuelConsumption(previousFuelLevel, speed, distance) {
-  const fuelConsumptionRate = 0.1;  // Base consumption rate (liters/km)
-  const speedFactor = speed / 100;  // More speed, more consumption
+  const fuelConsumptionRate = 0.1; // Base consumption rate (liters/km)
+  const speedFactor = speed / 100; // More speed, more consumption
   const fuelConsumed = distance * fuelConsumptionRate * speedFactor;
-  return Math.max(0, previousFuelLevel - fuelConsumed);  // Ensure fuel doesn't go below 0
+  return Math.max(0, previousFuelLevel - fuelConsumed); // Ensure fuel doesn't go below 0
 }
 
 // Function to generate random speed, sometimes stop
 function generateRandomSpeed(isStopped) {
-  return isStopped ? 0 : Math.random() < 0.1 ? 0 : Math.random() * 80 + 20;  // Random speed 20-100, occasionally 0 (stop)
+  return isStopped ? 0 : Math.random() < 0.1 ? 0 : Math.random() * 80 + 20; // Random speed 20-100, occasionally 0 (stop)
 }
 
 // Function to send data to Kafka topic
@@ -63,20 +63,20 @@ function sendTelemetryData(vehicleId, telemetryData) {
 
 // Function to simulate telemetry data for each vehicle
 function startSendingTelemetryDataForVehicles(vehicleCount) {
-  const interval = 2000;  // Send data every 2 seconds
+  const interval = 2000; // Send data every 2 seconds
   const vehicleStates = Array.from({ length: vehicleCount }, (_, vehicleId) => {
     const randomIndex = Math.floor(Math.random() * csvData.length);
     const startingPosition = csvData[randomIndex];
-    
+
     return {
       previousLatitude: startingPosition.latitude,
       previousLongitude: startingPosition.longitude,
       distanceTravelled: 0,
-      fuelLevel: 100,  // Start with a full tank (100 liters)
+      fuelLevel: 100, // Start with a full tank (100 liters)
       vehicleId: vehicleId + 1,
-      speed: 0,  // Start with 0 speed
-      isStopped: false,  // Initially not stopped
-      stopDuration: 0,  // Counter to manage stop duration
+      speed: 0, // Start with 0 speed
+      isStopped: false, // Initially not stopped
+      stopDuration: 0, // Counter to manage stop duration
     };
   });
 
@@ -93,10 +93,30 @@ function startSendingTelemetryDataForVehicles(vehicleCount) {
       // If stopped, manage stop duration
       if (vehicleState.isStopped) {
         vehicleState.stopDuration++;
-        if (vehicleState.stopDuration >= 5) {  // Resume after 5 intervals (10 seconds)
+        if (vehicleState.stopDuration >= 5) { // Resume after 5 intervals (10 seconds)
           vehicleState.isStopped = false;
           vehicleState.stopDuration = 0;
         }
+      } else {
+        // Simulate movement by randomly picking a new position
+        const randomIndex = Math.floor(Math.random() * csvData.length);
+        const newPosition = csvData[randomIndex];
+
+        // Calculate distance from the previous position
+        const distance = calculateDistance(
+          vehicleState.previousLatitude,
+          vehicleState.previousLongitude,
+          newPosition.latitude,
+          newPosition.longitude
+        );
+
+        // Update fuel level based on distance traveled
+        vehicleState.fuelLevel = calculateFuelConsumption(vehicleState.fuelLevel, vehicleState.speed, distance);
+        
+        // Update vehicle state with new position and distance traveled
+        vehicleState.distanceTravelled += distance;
+        vehicleState.previousLatitude = newPosition.latitude;
+        vehicleState.previousLongitude = newPosition.longitude;
       }
 
       const telemetryData = {
@@ -123,8 +143,8 @@ producer.on('ready', () => {
   const startupTimeInSeconds = (endTime[0] + endTime[1] / 1e9).toFixed(3); // Convert to seconds
   console.log(`Kafka Producer is connected and ready. Startup time: ${startupTimeInSeconds} seconds`);
 
-  const vehicleCount = 5;  // Set how many vehicles you want to simulate
-  startSendingTelemetryDataForVehicles(vehicleCount);  // Start sending data immediately
+  const vehicleCount = 5; // Set how many vehicles you want to simulate
+  startSendingTelemetryDataForVehicles(vehicleCount); // Start sending data immediately
 });
 
 producer.on('error', (err) => {
