@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Cloud Testing">
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Thread Group">
+        <intProp name="ThreadGroup.num_threads">50</intProp>
+        <intProp name="ThreadGroup.ramp_time">10</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">100</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <com.di.jmeter.kafka.sampler.KafkaProducerSampler guiclass="TestBeanGUI" testclass="com.di.jmeter.kafka.sampler.KafkaProducerSampler" testname="Kafka Producer SamplerCloud" enabled="true">
+          <stringProp name="kafkaMessage">{
+  &quot;vehicleId&quot;: &quot;Vehicle_2&quot;,
+  &quot;speed&quot;: 75,
+  &quot;distance&quot;: 12,
+  &quot;fuelConsumption&quot;: 1.4,
+  &quot;location&quot;: {
+    &quot;latitude&quot;: 37.7749,
+    &quot;longitude&quot;: -122.4194
+  },
+  &quot;timestamp&quot;: &quot;2024-09-30T12:00:00Z&quot;
+}
+</stringProp>
+          <stringProp name="kafkaMessageKey">Key</stringProp>
+          <stringProp name="kafkaProducerClientVariableName">KafkaProducerClientCloud</stringProp>
+          <stringProp name="kafkaTopic">fms_topic_speed</stringProp>
+          <collectionProp name="messageHeaders"/>
+          <stringProp name="partitionString"></stringProp>
+        </com.di.jmeter.kafka.sampler.KafkaProducerSampler>
+        <hashTree>
+          <com.di.jmeter.kafka.config.KafkaProducerConfig guiclass="TestBeanGUI" testclass="com.di.jmeter.kafka.config.KafkaProducerConfig" testname="Kafka Producer ConfigCloud" enabled="true">
+            <stringProp name="batchSize">16384</stringProp>
+            <stringProp name="clientId">JMeter-Producer-1</stringProp>
+            <collectionProp name="extraConfigs">
+              <elementProp name="" elementType="com.di.jmeter.kafka.utils.VariableSettings">
+                <stringProp name="configKey">Username </stringProp>
+                <stringProp name="configValue">MROO3DN223WW3PMQ</stringProp>
+              </elementProp>
+              <elementProp name="" elementType="com.di.jmeter.kafka.utils.VariableSettings">
+                <stringProp name="configKey">Password</stringProp>
+                <stringProp name="configValue">gWO9Q8neNAGc8p78HHq3wOMwVVQ/wpIfaiVJCDlRCtTbS5qE8f/9vj3GEwzag0HA</stringProp>
+              </elementProp>
+            </collectionProp>
+            <stringProp name="kafkaBrokers">pkc-7prvp.centralindia.azure.confluent.cloud:9092</stringProp>
+            <stringProp name="kafkaProducerClientVariableName">KafkaProducerClientCloud</stringProp>
+            <stringProp name="kafkaSslKeystore"></stringProp>
+            <stringProp name="kafkaSslKeystorePassword">Chang3M3</stringProp>
+            <stringProp name="kafkaSslPrivateKeyPass">Chang3M3</stringProp>
+            <stringProp name="kafkaSslTruststore">MROO3DN223WW3PMQ</stringProp>
+            <stringProp name="kafkaSslTruststorePassword">gWO9Q8neNAGc8p78HHq3wOMwVVQ/wpIfaiVJCDlRCtTbS5qE8f/9vj3GEwzag0HA</stringProp>
+            <stringProp name="securityType">securityType.sasl_plaintext</stringProp>
+            <stringProp name="serializerKey">org.apache.kafka.common.serialization.StringSerializer</stringProp>
+            <stringProp name="serializerValue">org.apache.kafka.common.serialization.StringSerializer</stringProp>
+          </com.di.jmeter.kafka.config.KafkaProducerConfig>
+          <hashTree/>
+        </hashTree>
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
