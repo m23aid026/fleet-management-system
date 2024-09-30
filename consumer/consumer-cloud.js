@@ -10,7 +10,7 @@ const startTime = process.hrtime();
 // Enable CORS for all routes
 const app = express();
 app.use(cors());
-const port = 3002;
+const port = 8080;
 
 const kafkaClient = new Kafka({
     brokers: [process.env.KAFKA_HOST],
@@ -59,7 +59,9 @@ function analyzeSpeedForAccident(telemetryData) {
         sendNotification(telemetryData.vehicleId, 'Vehicle stopped, possible accident detected.');
     }
 }
-
+app.get('/', (req, res) => {
+    res.send('Kafka consumer is running');
+});
 // API to get today's statistics
 app.get('/analytics/:vehicleId', async (req, res) => {
     try {
